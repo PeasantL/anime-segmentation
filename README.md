@@ -1,6 +1,6 @@
 # Anime Segmentation Inference
 
-Forked from [here] (https://github.com/SkyTNT/anime-segmentation)
+See https://github.com/SkyTNT/anime-segmentation for more info.
 
 
 ## Run 
