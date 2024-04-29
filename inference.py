@@ -1,5 +1,4 @@
 import os
-
 import argparse
 import cv2
 import torch
@@ -7,7 +6,6 @@ import numpy as np
 import glob
 from torch.cuda import amp
 from tqdm import tqdm
-import os
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
