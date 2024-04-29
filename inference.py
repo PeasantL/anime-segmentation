@@ -7,6 +7,9 @@ import numpy as np
 import glob
 from torch.cuda import amp
 from tqdm import tqdm
+import os
+from PIL import Image
+from PIL.PngImagePlugin import PngInfo
 
 from train import AnimeSegmentation, net_names
 
@@ -43,7 +46,7 @@ if __name__ == "__main__":
                         help='net name')
     parser.add_argument('--ckpt', type=str, default='saved_models/isnetis.ckpt',
                         help='model checkpoint path')
-    parser.add_argument('--data', type=str, default='../../dataset/anime-seg/test2',
+    parser.add_argument('--data', type=str, default='input',
                         help='input data dir')
     parser.add_argument('--out', type=str, default='out',
                         help='output dir')
@@ -53,7 +56,7 @@ if __name__ == "__main__":
                         help='cpu or cuda:0')
     parser.add_argument('--fp32', action='store_true', default=False,
                         help='disable mix precision')
-    parser.add_argument('--only-matted', action='store_true', default=False,
+    parser.add_argument('--only-matted', action='store_true', default=True,
                         help='only output matted image')
 
     opt = parser.parse_args()
@@ -69,13 +72,36 @@ if __name__ == "__main__":
         os.mkdir(opt.out)
 
     for i, path in enumerate(tqdm(sorted(glob.glob(f"{opt.data}/*.*")))):
-        img = cv2.cvtColor(cv2.imread(path, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
-        mask = get_mask(model, img, use_amp=not opt.fp32, s=opt.img_size)
-        if opt.only_matted:
-            img = np.concatenate((mask * img + 1 - mask, mask * 255), axis=2).astype(np.uint8)
-            img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA)
-            cv2.imwrite(f'{opt.out}/{i:06d}.png', img)
-        else:
-            img = np.concatenate((img, mask * img, mask.repeat(3, 2) * 255), axis=1).astype(np.uint8)
-            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-            cv2.imwrite(f'{opt.out}/{i:06d}.jpg', img)
+
+        try:
+            #Image is opened and chara data is saved
+            with Image.open(path) as image:
+                image.load()
+                char_data = image.info 
+
+            #Conversion to a different colour channel
+            img = cv2.cvtColor(cv2.imread(path, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
+            #PNG mask 
+            mask = get_mask(model, img, use_amp=not opt.fp32, s=opt.img_size)
+            if opt.only_matted:
+                img = np.concatenate((mask * img + 1 - mask, mask * 255), axis=2).astype(np.uint8)
+                img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA)
+                
+                #This process is destructive, the tEXt information is lossed
+                cv2.imwrite(f'{opt.out}/{os.path.basename(path)}', img)
+
+                #Proccessed Imaged Is opened again, writing the saved chara to it.
+                with Image.open(os.path.join(opt.out, os.path.basename(path))) as image:
+                    image.load()
+                    metadata = PngInfo()
+                    #yuck, but i cant think of a more streamline way to access both key and value 
+                    metadata.add_text(next(iter(char_data)), char_data["chara"])
+                    image.save(os.path.join(opt.out, os.path.basename(path)), pnginfo=metadata)
+
+            #combined image    
+            else:
+                img = np.concatenate((img, mask * img, mask.repeat(3, 2) * 255), axis=1).astype(np.uint8)
+                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+                cv2.imwrite(f'{opt.out}/{i:06d}.jpg', img)
+        except:
+            raise
