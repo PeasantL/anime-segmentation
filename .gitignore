@@ -151,5 +151,6 @@ cython_debug/
 !/input/.gitkeep
 /out/*
 !/out/.gitkeep
-/lightning_logs
 /saved_models/*
+!/saved_models/.gitkeep
+/lightning_logs
