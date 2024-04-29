@@ -148,6 +148,8 @@ cython_debug/
 .idea/
 
 /input/*
+!/input/.gitkeep
 /out/*
+!/out/.gitkeep
 /lightning_logs
 /saved_models/*
