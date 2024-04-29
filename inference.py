@@ -6,10 +6,9 @@ import numpy as np
 import glob
 from torch.cuda import amp
 from tqdm import tqdm
-from PIL import Image
-from PIL.PngImagePlugin import PngInfo
 
 from train import AnimeSegmentation, net_names
+from character_card_process import PreserveImageMetadata, MetadataError
 
 
 def get_mask(model, input_img, use_amp=True, s=640):
@@ -72,11 +71,12 @@ if __name__ == "__main__":
     for i, path in enumerate(tqdm(sorted(glob.glob(f"{opt.data}/*.*")))):
 
         try:
-            #Image is opened and chara data is saved
-            with Image.open(path) as image:
-                image.load()
-                char_data = image.info 
+            image = PreserveImageMetadata()
+            image.extract_image_metadata(path)
+        except MetadataError as e:
+            print(f"File {path} has no chara metadata")
 
+        try:
             #Conversion to a different colour channel
             img = cv2.cvtColor(cv2.imread(path, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB)
             #PNG mask 
@@ -85,21 +85,16 @@ if __name__ == "__main__":
                 img = np.concatenate((mask * img + 1 - mask, mask * 255), axis=2).astype(np.uint8)
                 img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA)
                 
-                #This process is destructive, the tEXt information is lossed
+                #This process is destructive, the tEXt information is lost
                 cv2.imwrite(f'{opt.out}/{os.path.basename(path)}', img)
 
-                #Proccessed Imaged Is opened again, writing the saved chara to it.
-                with Image.open(os.path.join(opt.out, os.path.basename(path))) as image:
-                    image.load()
-                    metadata = PngInfo()
-                    #yuck, but i cant think of a more streamline way to access both key and value 
-                    metadata.add_text(next(iter(char_data)), char_data["chara"])
-                    image.save(os.path.join(opt.out, os.path.basename(path)), pnginfo=metadata)
+                if image.valid_metadata:
+                    image.save_image_with_metadata(os.path.join(opt.out, os.path.basename(path)))
 
             #combined image    
             else:
                 img = np.concatenate((img, mask * img, mask.repeat(3, 2) * 255), axis=1).astype(np.uint8)
                 img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
                 cv2.imwrite(f'{opt.out}/{i:06d}.jpg', img)
-        except:
-            raise
+        except Exception as e:
+            print(f"Error processing the file {path}: {e}")

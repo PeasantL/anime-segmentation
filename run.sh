@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Check if the activate script exists
 if [ -f "./.venv/bin/activate" ]; then
     echo "Activating existing virtual environment."
@@ -7,6 +9,7 @@ else
     python3 -m venv .venv
     source "./.venv/bin/activate"
     pip install -r requirements.txt  
+fi
 
 # Check if the model checkpoint file exists
 if [ ! -f "./saved_models/isnetis.ckpt" ]; then  
