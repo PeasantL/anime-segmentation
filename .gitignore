@@ -147,7 +147,7 @@ cython_debug/
 # PyCharm
 .idea/
 
-/input
-/out
+/input/*
+/out/*
 /lightning_logs
-/saved_models
+/saved_models/*
