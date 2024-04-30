@@ -8,7 +8,8 @@ IF EXIST ".venv\Scripts\activate.bat" (
     echo Virtual environment does not exist. Creating virtual environment.
     python -m venv .venv
     CALL ".venv\Scripts\activate.bat"
-    pip install -r requirements.txt
+    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+    pip3 install -r requirements.txt
 )
 
 REM Check if the model checkpoint file exists
