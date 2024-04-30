@@ -1,6 +1,6 @@
 # Character Card-V2 Background Segmentation 
 
-Inference to remove backgrounds of [character-card-spec-v2](https://github.com/malfoyslastname/character-card-spec-v2) while retaining the metadata. 
+Inference to remove backgrounds of [character-card-spec-v2](https://github.com/malfoyslastname/character-card-spec-v2)  
 
 See [here](https://github.com/SkyTNT/anime-segmentation) for details on the removal process. 
 
@@ -10,7 +10,9 @@ See [here](https://github.com/SkyTNT/anime-segmentation) for details on the remo
 ```
 git clone https://github.com/PeasantL/anime-segmentation
 cd anime-segmentation
-./run.sh
+
+./run.sh #Linux
+./run.bat #Windows
 ```
 
 
