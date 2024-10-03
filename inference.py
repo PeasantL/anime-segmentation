@@ -88,6 +88,9 @@ if __name__ == "__main__":
                 #This process is destructive, the tEXt information is lost
                 cv2.imwrite(f'{opt.out}/{os.path.basename(path)}', img)
 
+                #change to novel style -> remove * 
+                image.modify_metadata()
+
                 if image.valid_metadata:
                     image.save_image_with_metadata(os.path.join(opt.out, os.path.basename(path)))
 
