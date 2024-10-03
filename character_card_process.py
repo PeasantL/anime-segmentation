@@ -48,7 +48,7 @@ class PreserveImageMetadata:
     
     def modify_json_values(self, json_data):
         # Apply text processing to specific fields
-        fields_to_process = ['first_mes'] + ['alternate_greetings']
+        fields_to_process = ['first_mes', 'alternate_greetings', 'mes_example']
         for field in fields_to_process:
             if field in json_data['data']:
                 if field == 'alternate_greetings':
@@ -56,6 +56,8 @@ class PreserveImageMetadata:
                         self.text_processor.process_passage_based_on_content(greeting)
                         for greeting in json_data['data'][field]
                     ]
+                elif field == 'mes_example':
+                    json_data['data'][field] = self.text_processor.process_example_mes(json_data['data'][field])
                 else:
                     json_data['data'][field] = self.text_processor.process_passage_based_on_content(json_data['data'][field])
         return json_data
@@ -97,6 +99,23 @@ class TextProcessor:
     def strip_asterisks(self, passage):
         # Removes all asterisks from the passage
         return passage.replace('*', '')
+
+    def process_example_mes(self, passage):
+        # Regex to match <START>|{{char}}:|{{user}}: followed by content
+        pattern = r"(<START>|{{char}}:|{{user}}:)(.*?)(?=(<START>|{{char}}:|{{user}}:)|$)"
+        new_passage = ""
+
+        for match in re.finditer(pattern, passage, re.DOTALL):
+            group1 = match.group(1)
+            group2 = match.group(2)
+
+            # Apply string processing only to group2
+            processed_group2 = self.process_passage_based_on_content(group2)
+
+            # Rebuild the passage with processed group2
+            new_passage += f"{group1}{processed_group2}"
+
+        return new_passage
 
     def process_passage_based_on_content(self, passage):
         if '"' in passage and '*' in passage:
