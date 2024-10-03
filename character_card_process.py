@@ -68,8 +68,8 @@ class MetadataError(Exception):
         self.message = message
         super().__init__(self.message)
 
-#Process String
 
+# Process String
 class TextProcessor:
     def __init__(self):
         # Initialize any necessary attributes (if needed)
@@ -118,12 +118,23 @@ class TextProcessor:
         return new_passage
 
     def process_passage_based_on_content(self, passage):
+        # Check for an odd number of either asterisks or quotes
+        if passage.count('"') % 2 != 0 or passage.count('*') % 2 != 0:
+            return passage  # Return unaltered if there's an odd number of quotes or asterisks
+        
+        # Check if the passage contains both quotes and asterisks
         if '"' in passage and '*' in passage:
-            return passage  # Return unaltered, both quotes and asterisks exist
+            # If both quotes and asterisks exist, check if the passage only contains these enclosed texts
+            # using the provided regex to strip all and check if it leaves an empty string.
+            if re.sub(r"([\"*])(?:(?=(\\?))\2.)*?\1", "", passage).strip() == "":
+                return self.strip_asterisks(passage)  # Remove all asterisks
+            return passage  # Return unaltered if quotes and asterisks exist, but not fully enclosed
         elif '"' in passage:
             return passage  # Return unaltered, only quotes exist
         elif '*' in passage:
-            processed_text = self.add_quotes_to_unenclosed_text(passage)  # Only asterisks exist, process it
+            # If only asterisks exist, process it by adding quotes and stripping asterisks
+            processed_text = self.add_quotes_to_unenclosed_text(passage)
             return self.strip_asterisks(processed_text)  # Additionally, strip all asterisks
         else:
             return passage  # No quotes or asterisks, return unaltered
+
